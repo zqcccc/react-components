@@ -1,0 +1,51 @@
+
+.rc-tree {
+  list-style: none;
+
+  .rc-tree-selected{
+    background-color: lightsalmon;
+  }
+}
+.rc-tree-treenode-switcher {
+  display: inline-block;
+  vertical-align: middle;
+  border: 0 none;
+  cursor: pointer;
+
+  width: 18px;
+  height: 18px;
+}
+
+.rc-tree-iconEle, .rc-tree-treenode-switcher {
+  display: inline-block;
+  position: relative;
+  width: 21px;
+  height: 16px;
+  &:before {
+    position: absolute;
+    top: -3px;
+    left: 1px;
+  }
+}
+.rc-tree-icon__open {
+  &:before {
+    content: '\2649';
+  }
+}
+.rc-tree-icon__close {
+  &:before {
+    content: '\2648';
+  }
+}
+.rc-tree-switcher__open {
+  &:before {
+    content: '-';
+    top: -1px;
+  }
+}
+.rc-tree-switcher__close {
+  &:before {
+    content: '+';
+    top: -1px;
+  }
+}
