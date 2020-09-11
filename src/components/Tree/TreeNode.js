@@ -10,16 +10,23 @@ export default class TreeNode extends Component {
     super(props);
     this.state = {
       expanded: this.props.expanded,
-      selected: this.props.selected,
-      checked: this.props.checked
+      selected: this.props.selected || false,
+      checked: this.props.checked || false,
+      checkPart: false
     };
   }
+
+  componentDidMount() {
+    if (this.newChildren) {
+      console.log( this );
+      Tree.trees.push(this);
+    }
+  }
+
   UNSAFE_componentWillReceiveProps(nextProps) {
-    var sta = {
-      selected: nextProps.selected,
-      checked: nextProps.selected
-    };
-    this.setState(sta);
+    this.setState({
+        checked: nextProps._checked
+    });
   }
   switchExpandedState = (newState, onStateChangeComplete) => {
     this.setState(
@@ -46,29 +53,51 @@ export default class TreeNode extends Component {
   handleChecked = () => {
     var checked = !this.state.checked;
     this.setState({
-      checked: checked,
-      selected: checked
+      checked,
     });
+    Tree.trees.forEach(function (c) {
+      var _pos = this.props._pos;
+      var cPos = c.props._pos;
+      if (_pos.length > cPos.length && _pos.indexOf(cPos) === 0){
+        // c.checkPart()
+      }
+    }, this);
+    if (this.props.onChecked) {
+      this.props.onChecked(checked, this);
+    }
   };
+
+  checkPart = () => {
+    this.setState({
+      checkPart: true
+    });
+  }
 
   renderChildren(children) {
     var newChildren = null;
-    if (
-      children.type === TreeNode ||
-      (Array.isArray(children) &&
+    if (children.type === TreeNode || Array.isArray(children) &&
         children.every(function (item) {
           return item.type === TreeNode;
-        }))
-    ) {
+        })) {
+
+      var cls = {};
+      cls[this.props.prefixCls + '-child-tree'] = true;
+      if (this.props.showLine) {
+        cls.line = true;
+      }
+
       var treeProps = {
-        className: this.props.prefixCls + "-child-tree",
+        className: classNames(cls),
+        _level: this.props._level + 1,
+        _pos: this.props._pos,
         expanded: this.state.expanded,
-        selected: this.state.checked,
-        checked: this.state.checked,
-        checkable: this.props.checkable,
+        //selected: this.state.checked,
+        _checked: this.state.checked,
+        checkable: this.props.checkable, //只是为了传递根节点上的checkable设置,是否有更好做法?
+        onChecked: this.props.onChecked,
         onSelect: this.props.onSelect
       };
-      newChildren = <Tree {...treeProps}>{children}</Tree>;
+      newChildren = this.newChildren = <Tree {...treeProps}>{children}</Tree>;
     } else {
       newChildren = children;
     }
@@ -83,13 +112,26 @@ export default class TreeNode extends Component {
     var switchCls = state.expanded ? "open" : "close";
 
     var switcherCls = {};
+    switcherCls.button = true;
     switcherCls[prefixCls + "-treenode-switcher"] = true;
     switcherCls[prefixCls + "-switcher__" + switchCls] = true;
 
-    var switcherProps = {
-      className: joinClasses(props.className, classNames(switcherCls)),
-      onClick: this.handleExpandedState
-    };
+    var checkbox = null;
+    var checkboxCls = {};
+    if (props.checkable) {
+      checkboxCls.button = true;
+      checkboxCls.chk = true;
+      /* jshint ignore:start */
+      if (state.checkPart) {
+        checkboxCls.checkbox_true_part = true;
+      } else if (state.checked) {
+        checkboxCls.checkbox_true_full = true;
+      } else {
+        checkboxCls.checkbox_false_full = true;
+      }
+      /* jshint ignore:end */
+      checkbox = <span className={classNames(checkboxCls)} onClick={this.handleChecked}></span>;
+    }
 
     var iconEleCls = {};
     iconEleCls[prefixCls + "-iconEle"] = true;
@@ -100,12 +142,12 @@ export default class TreeNode extends Component {
     if (props.iconEle && React.isValidElement(props.iconEle)) {
       userIconEle = props.iconEle;
     }
-    var iconEleProps = {
-      className: classNames(iconEleCls)
-    };
-    if (props.checkable) {
-      iconEleProps.onClick = this.handleChecked;
-    }
+    // var iconEleProps = {
+    //   className: classNames(iconEleCls)
+    // };
+    // if (props.checkable) {
+    //   iconEleProps.onClick = this.handleChecked;
+    // }
 
     var content = props.title;
     var newChildren = this.renderChildren(props.children);
@@ -115,16 +157,15 @@ export default class TreeNode extends Component {
     }
 
     return (
-      <li>
-        <span {...switcherProps}></span>
-        <a title={content}>
-          <span {...iconEleProps}>{userIconEle}</span>
-          <span
-            className={state.selected ? prefixCls + "-selected" : ""}
-            onClick={this.handleSelect}
-          >
-            {content}
-          </span>
+      <li className={'level' + props._level}>
+        <span className={joinClasses(props.className, classNames(switcherCls))}
+              onClick={this.handleExpandedState}></span>
+        {checkbox}
+        <a title={content}
+           className={state.selected ? prefixCls + '-selected' : ''}
+           onClick={this.handleSelect}>
+          <span className={classNames(iconEleCls)}>{userIconEle}</span>
+          <span>{content}</span>
         </a>
         {newChildren}
       </li>
@@ -134,8 +175,8 @@ export default class TreeNode extends Component {
 TreeNode.defaultProps = {
   title: "---",
   expanded: true,
-  selected: false,
-  checked: false
+  // selected: false,
+  // checked: false
 };
 // export default function TreeNode({
 //   title = "---",

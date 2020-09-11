@@ -8,9 +8,18 @@ import "./index.less";
 // }
 
 export default class Tree extends Component {
+      
+  static trees = []
+  
   constructor(props) {
     super(props);
-    this.state = {};
+    this.state = {
+    };
+  }
+  handleChecked = (isChk, c, e) => {
+    if (this.props.onChecked) {
+      this.props.onChecked(isChk, c, e);
+    }
   }
   handleSelect = (isSel, c, e) => {
     if (this.props.onSelect) {
@@ -24,12 +33,17 @@ export default class Tree extends Component {
     e.preventDefault();
   };
 
-  renderTreeNode = (child) => {
+  renderTreeNode = (child, index) => {
     var props = this.props;
     var cloneProps = {
       prefixCls: props.prefixCls,
       checkable: props.checkable,
-      selected: props.selected,
+      //selected: props.selected,
+      _level: props._level || 0,
+      _pos: (props._pos || 0) + '-' + index,
+      showLine: props.showLine,
+      _checked: props._checked,
+      onChecked: this.handleChecked,
       onSelect: createChainedFunction(child.props.onSelect, this.handleSelect)
     };
     return React.cloneElement(child, cloneProps);
@@ -62,14 +76,15 @@ export default class Tree extends Component {
     }
 
     //this.newChildren = rcUtil.Children.toArray(props.children).map(this.renderTreeNode, this);
-    this.newChildren = React.Children.map(props.children, this.renderTreeNode);
+    this.newChildren = React.Children.map(props.children, this.renderTreeNode, this);
 
     return <ul {...domProps}>{this.newChildren}</ul>;
   }
 }
 Tree.defaultProps = {
   prefixCls: "rc-tree",
-  expanded: true
+  expanded: true,
+  showLine: true
 };
 // export default function Tree({
 //   onSelect,

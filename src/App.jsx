@@ -20,10 +20,10 @@ export default function App() {
             <TreeNode>leaf </TreeNode>
           </TreeNode>
         </TreeNode>
+        <TreeNode>leaf </TreeNode>
         <TreeNode>
           <TreeNode>leaf </TreeNode>
         </TreeNode>
-        <TreeNode>leaf </TreeNode>
       </Tree>
     </div>
   );
